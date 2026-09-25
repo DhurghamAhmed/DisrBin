@@ -1,6 +1,6 @@
 // GET /:id — a paste, read-only in the same editor, coloured by its language.
 import { loadPaste, notFound, page, escapeHTML } from "./_shared.mjs";
-import { detect, isLanguage, languageName, cmMode, mostlyArabic, MAX_HIGHLIGHT_BYTES } from "./_highlight.mjs";
+import { languageOf, languageName, cmMode, mostlyArabic } from "./_highlight.mjs";
 
 const size = (b) => (b < 1024 ? `${b} B` : `${(b / 1024).toFixed(b < 10240 ? 1 : 0)} KB`);
 
@@ -11,8 +11,7 @@ export default async (req, context) => {
 
   const { created, bytes, language: hint } = paste.meta;
   const text = paste.text.replace(/\n$/, "");
-  let language = "plaintext";
-  if (bytes <= MAX_HIGHLIGHT_BYTES) language = isLanguage(hint) ? hint : hint ? "plaintext" : detect(text);
+  const language = languageOf(text, hint, bytes);
   const { mode, mime } = cmMode(language);
   const lines = text.split("\n").length;
   const dir = language === "plaintext" && mostlyArabic(text) ? "rtl" : "ltr";

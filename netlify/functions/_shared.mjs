@@ -33,7 +33,7 @@ export function authorized(req) {
 }
 
 // savePaste validates and stores a paste for one day. It returns the new
-// paste, or an error response to send back.
+// paste's id, expiry, text and metadata, or an error response to send back.
 export async function savePaste(req) {
   let body;
   try {
@@ -55,7 +55,7 @@ export async function savePaste(req) {
   for (let i = 0; i < 3 && (await s.getMetadata(id)); i++) id = newId();
   const meta = { created: now, expires: now + TTL_MS, bytes, lines: content.split("\n").length, language };
   await s.set(id, content, { metadata: meta });
-  return { id, expires: meta.expires };
+  return { id, expires: meta.expires, content, meta };
 }
 
 // loadPaste returns a live paste, deleting it if its day is up.
