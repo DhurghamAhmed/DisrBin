@@ -40,17 +40,6 @@ The editor is [CodeMirror 5](https://codemirror.net/5/), loaded from cdnjs. Lang
 | Lifetime | 24 hours |
 | Editor saves | 6 a minute per visitor |
 
-## Run it locally
-
-You need Node.js and the [Netlify CLI](https://docs.netlify.com/cli/get-started/).
-
-```sh
-npm install
-PASTE_SECRET=any-local-secret netlify dev --offline
-```
-
-Then open http://localhost:8888.
-
 ## Deploy
 
 ```sh
@@ -71,4 +60,4 @@ curl -X POST https://your-site/api/paste \
 
 ---
 
-Made by [Dhurgham](https://idisr.com).
+Made by [Dhurgham](https://idisr.com), built with AI.
