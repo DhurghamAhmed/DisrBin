@@ -49,7 +49,7 @@ curl -X POST https://your-site/api/paste \
   -H "Authorization: Bearer $PASTE_SECRET" \
   -H "Content-Type: application/json" \
   -d '{"content": "print(\"hello\")", "language": "python"}'
-# {"id":"Ab3dEf7h","expires":1790000000000}   ->   https://your-site/Ab3dEf7h
+# {"id":"Ab3dEf7h","expires":1790000000000,"language":"python","name":"Python"}   ->   https://your-site/Ab3dEf7h
 ```
 
 `language` is optional; without it the language is detected when the paste is viewed.

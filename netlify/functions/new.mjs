@@ -9,7 +9,7 @@ export default async (req) => {
   }
   const saved = await savePaste(req);
   if (saved.error) return saved.error;
-  return Response.json(saved, { status: 201, headers: { "Cache-Control": "no-store" } });
+  return Response.json({ id: saved.id, expires: saved.expires }, { status: 201, headers: { "Cache-Control": "no-store" } });
 };
 
 export const config = {

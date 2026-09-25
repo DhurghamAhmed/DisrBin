@@ -144,6 +144,15 @@ export function detect(text) {
   return best.language;
 }
 
+// languageOf decides a paste's language the one way every page shares: a
+// language named when it was saved wins, one too large to colour is plain
+// text, and anything else is detected. text is without its final newline.
+export function languageOf(text, hint, bytes) {
+  if (bytes > MAX_HIGHLIGHT_BYTES) return "plaintext";
+  if (hint) return isLanguage(hint) ? hint : "plaintext";
+  return detect(text);
+}
+
 // CM_MODES maps our language ids to CodeMirror 5's mode file and MIME type,
 // which the page loads on demand to colour the text.
 const CM_MODES = {
