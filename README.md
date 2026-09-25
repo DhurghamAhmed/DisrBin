@@ -40,13 +40,9 @@ The editor is [CodeMirror 5](https://codemirror.net/5/), loaded from cdnjs. Lang
 | Lifetime | 24 hours |
 | Editor saves | 6 a minute per visitor |
 
-## Deploy
+## Bot API
 
-```sh
-netlify deploy --prod
-```
-
-Set `PASTE_SECRET` in the site's environment variables. It is the Bearer token that `POST /api/paste` expects:
+`POST /api/paste` expects the `PASTE_SECRET` environment variable as a Bearer token:
 
 ```sh
 curl -X POST https://your-site/api/paste \
