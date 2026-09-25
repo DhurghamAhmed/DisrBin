@@ -1,0 +1,10 @@
+{
+  "name": "disrbin",
+  "private": true,
+  "type": "module",
+  "description": "DisrBin: a fast, private paste bin with automatic syntax highlighting. Every paste deletes itself after 24 hours. Runs on Netlify Functions and Blobs.",
+  "dependencies": {
+    "@netlify/blobs": "^11.1.1",
+    "highlight.js": "^11.12.0"
+  }
+}
