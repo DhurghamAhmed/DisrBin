@@ -11,7 +11,7 @@ export default async () =>
     title: "DisrBin — Paste code, share a link",
     publicPath: "/",
     body: `<main id="app" class="edit"></main>`,
-    foot: `<span id="pos">Ln 1, Col 1</span><span class="sep">·</span><span id="size">0 B</span><span class="sep extra">·</span><label class="lang extra">Language <select id="lang">${options}</select></label>`,
+    foot: `<span id="pos">Ln 1, Col 1</span><span class="sep"></span><span id="size">0 B</span><span class="sep extra"></span><label class="lang extra"><span>Language</span><select id="lang">${options}</select></label>`,
   });
 
 export const config = { path: "/", method: "GET" };

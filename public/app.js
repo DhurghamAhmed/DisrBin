@@ -22,6 +22,10 @@
     remember("theme", next);
   });
 
+  // The save shortcut, written the way this platform writes it.
+  var saveKey = document.getElementById("savekey");
+  if (saveKey && /Mac|iPhone|iPad/.test(navigator.platform)) saveKey.textContent = "⌘ S";
+
   var app = document.getElementById("app");
   if (!app) return;
   var isView = app.classList.contains("view");
@@ -29,9 +33,11 @@
   CodeMirror.modeURL = CDN + "/mode/%N/%N.min.js";
 
   var toastEl = document.getElementById("toast");
+  var toastText = document.getElementById("toast-text");
   var toastTimer;
-  function toast(text) {
-    toastEl.textContent = text;
+  function toast(text, err) {
+    toastText.textContent = text;
+    toastEl.classList.toggle("err", !!err);
     toastEl.hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { toastEl.hidden = true; }, 1600);
@@ -39,7 +45,7 @@
 
   // --- Editor ---
   var wrapPref = recall("wrap");
-  var wrap = wrapPref === null ? window.matchMedia("(max-width: 640px)").matches : wrapPref === "1";
+  var wrap = wrapPref === null ? window.matchMedia("(max-width: 720px)").matches : wrapPref === "1";
   var source = document.getElementById("source");
   var editor = CodeMirror(app, {
     value: source ? source.value : "",
@@ -78,34 +84,40 @@
   var wrapBtn = document.getElementById("wrap");
   function applyWrap(on) {
     editor.setOption("lineWrapping", on);
-    wrapBtn.setAttribute("aria-pressed", on ? "true" : "false");
+    if (wrapBtn) wrapBtn.setAttribute("aria-pressed", on ? "true" : "false");
   }
   applyWrap(wrap);
-  wrapBtn.addEventListener("click", function () {
-    var on = !editor.getOption("lineWrapping");
-    applyWrap(on);
-    remember("wrap", on ? "1" : "0");
-  });
+  if (wrapBtn) {
+    wrapBtn.addEventListener("click", function () {
+      var on = !editor.getOption("lineWrapping");
+      applyWrap(on);
+      remember("wrap", on ? "1" : "0");
+    });
+  }
 
   // --- Copy: the text, or the link ---
   function copyText(text, done) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(done, function () { toast("Copy failed"); });
+      navigator.clipboard.writeText(text).then(done, function () { toast("Copy failed", true); });
     } else {
-      toast("Copy not available");
+      toast("Copy not available", true);
     }
   }
+  function flash(el) {
+    el.classList.add("done");
+    setTimeout(function () { el.classList.remove("done"); }, 1600);
+  }
   var copyBtn = document.getElementById("copy");
-  if (copyBtn) copyBtn.addEventListener("click", function () { copyText(editor.getValue(), function () { toast("Copied"); }); });
+  if (copyBtn) {
+    copyBtn.addEventListener("click", function () {
+      copyText(editor.getValue(), function () { toast("Copied"); flash(copyBtn); });
+    });
+  }
   var crumb = document.getElementById("crumb");
   if (crumb) {
     crumb.addEventListener("click", function (e) {
       e.preventDefault();
-      copyText(location.origin + location.pathname, function () {
-        toast("Link copied");
-        crumb.classList.add("done");
-        setTimeout(function () { crumb.classList.remove("done"); }, 1600);
-      });
+      copyText(location.origin + location.pathname, function () { toast("Link copied"); flash(crumb); });
     });
   }
 
@@ -116,6 +128,20 @@
       when.textContent = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" })
         .format(new Date(Number(when.dataset.created)));
     } catch (e) {}
+  }
+
+  // --- Time left, ticking down a minute at a time ---
+  var ttl = document.getElementById("ttl");
+  if (ttl) {
+    var expires = Number(ttl.dataset.expires);
+    function tick() {
+      var left = expires - Date.now();
+      if (left <= 0) { ttl.textContent = "Expired"; return; }
+      var h = Math.floor(left / 3600000), m = Math.floor((left % 3600000) / 60000);
+      ttl.textContent = "Expires in " + (h ? h + "h " + m + "m" : Math.max(1, m) + "m");
+    }
+    tick();
+    setInterval(tick, 30000);
   }
 
   // --- Status bar ---
@@ -210,7 +236,7 @@
     }).catch(function (err) {
       busy = false;
       saveBtn.disabled = false;
-      toast(err.message || "Could not save");
+      toast(err.message || "Could not save", true);
     });
   }
   saveBtn.addEventListener("click", save);

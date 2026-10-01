@@ -92,7 +92,7 @@ export const PAGE_CSP =
   "style-src 'self' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src https://fonts.gstatic.com; " +
   "connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
 
-const FONTS = "https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400;1,700&display=swap";
+const FONTS = "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap";
 
 // Icons, drawn inline so the page loads no icon font.
 const icon = (paths) =>
@@ -106,10 +106,22 @@ export const ICONS = {
   wrap: icon('<path d="M3 6h18M3 12h15a3 3 0 1 1 0 6h-4M3 18h7"/><path d="m16 16-2 2 2 2"/>'),
   sun: icon('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
   moon: icon('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'),
+  check: icon('<path d="M20 6 9 17l-5-5"/>'),
+  x: icon('<path d="M18 6 6 18M6 6l12 12"/>'),
+  arrow: icon('<path d="M7 17 17 7M8 7h9v9"/>'),
 };
 
-const button = (id, title, svg, extra = "") =>
-  `<button class="action" type="button" id="${id}" title="${title}" aria-label="${title}" ${extra}>${svg}</button>`;
+// The mark: a document with a folded corner and a code sign, drawn inline
+// so it is crisp at any size and takes the theme's colours.
+export const MARK = `<svg class="mark" viewBox="0 0 32 32" width="28" height="28" fill="none" aria-hidden="true"><path d="M8 3h11l10 10v13a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path class="fold" d="M19 3v7a3 3 0 0 0 3 3h7z"/><path class="code" d="m12.5 15.5-3.5 3.5 3.5 3.5M19.5 15.5l3.5 3.5-3.5 3.5M17.6 13.5l-3.2 11" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+// host is where the site lives, shown beside a paste's id in the bar.
+const host = (() => {
+  try { return new URL(process.env.URL).host; } catch { return "disrbin"; }
+})();
+
+const iconButton = (id, title, svg, extra = "") =>
+  `<button class="icon-btn" type="button" id="${id}" title="${title}" aria-label="${title}" ${extra}>${svg}</button>`;
 
 // The shell: the bar with the mark and the actions, the content, and the
 // status footer. view, when given, is the paste being shown, whose path
@@ -138,21 +150,22 @@ function seo(title, description, path) {
 <meta name="twitter:title" content="${t}">
 <meta name="twitter:description" content="${d}">
 <meta name="twitter:image" content="${site}/og.png">
-<meta name="theme-color" content="#21252B">`;
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#F8F9FB">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#10141B">`;
 }
 
 // page wraps a view in the app shell. Only pages given a public path are
 // indexed; pastes and errors stay out of search engines.
 export function page({ title, body, status = 200, view = null, foot = "", plain = false, publicPath = null, description = DESCRIPTION }) {
   const crumb = view
-    ? `<a class="crumb" id="crumb" href="/${view.id}" title="Copy link"><span class="path">/${view.id}</span>${ICONS.link}</a>`
+    ? `<a class="crumb" id="crumb" href="/${view.id}" title="Copy link"><span class="host">${escapeHTML(host)}/</span><span class="path">${view.id}</span><span class="ic-link">${ICONS.link}</span><span class="ic-check">${ICONS.check}</span></a>`
     : "";
   const actions = plain
     ? ""
     : view
-    ? button("copy", "Copy text", ICONS.copy) +
-      `<a class="action" id="raw" href="/${view.id}/raw" title="Raw text" aria-label="Raw text">${ICONS.raw}</a>`
-    : button("save", "Save (Ctrl+S)", ICONS.save, "disabled");
+    ? `<button class="btn btn-primary" type="button" id="copy" title="Copy text">${ICONS.copy}<span class="label">Copy</span></button>
+    <a class="btn btn-ghost" id="raw" href="/${view.id}/raw" title="Raw text">${ICONS.raw}<span class="label">Raw</span></a>`
+    : `<button class="btn btn-primary" type="button" id="save" title="Save" disabled>${ICONS.save}<span class="label">Save</span><kbd id="savekey">Ctrl S</kbd></button>`;
   const html = `<!doctype html>
 <html lang="en" dir="ltr">
 <head>
@@ -173,22 +186,22 @@ ${publicPath ? seo(title, description, publicPath) : ""}
 </head>
 <body>
 <header class="bar">
-  <a class="brand" href="/" aria-label="DisrBin home"><img class="logo on-light" src="/logo-light.png" alt="DisrBin" width="118" height="26"><img class="logo on-dark" src="/logo-dark.png" alt="DisrBin" width="118" height="26"></a>
+  <a class="brand" href="/" aria-label="DisrBin home">${MARK}<span class="wordmark">Disr<b>Bin</b></span></a>
   ${crumb}
   <div class="actions">
     ${actions}
-    <a class="action" id="new" href="/" title="New paste" aria-label="New paste">${ICONS.plus}</a>
-    ${plain ? "" : button("wrap", "Wrap lines", ICONS.wrap, 'aria-pressed="false"')}
+    <a class="btn btn-ghost" id="new" href="/" title="New paste">${ICONS.plus}<span class="label">New</span></a>
+    ${plain ? "" : iconButton("wrap", "Wrap lines", ICONS.wrap, 'aria-pressed="false"')}
     <span class="divider" aria-hidden="true"></span>
-    ${button("theme", "Switch theme", ICONS.sun.replace("<svg ", '<svg class="sun" ') + ICONS.moon.replace("<svg ", '<svg class="moon" '))}
+    ${iconButton("theme", "Switch theme", ICONS.sun.replace("<svg ", '<svg class="sun" ') + ICONS.moon.replace("<svg ", '<svg class="moon" '))}
   </div>
 </header>
 ${body}
 <footer class="foot">
-  <span class="credit">Copyright © ${new Date().getUTCFullYear()} <a href="https://idisr.com" target="_blank" rel="noopener" title="idisr.com">Dhurgham</a><span class="sep">·</span><a class="about-link" href="/about">About</a><span class="sep">·</span><span class="made-ai">Built with AI</span></span>
+  <span class="credit"><span>© ${new Date().getUTCFullYear()} <a href="https://idisr.com" target="_blank" rel="noopener" title="idisr.com">Dhurgham</a></span><span class="sep"></span><a class="about-link" href="/about">About</a><span class="sep extra"></span><span class="extra">Built with AI</span></span>
   <span class="status" id="status">${foot}</span>
 </footer>
-<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden><span class="ic-check">${ICONS.check}</span><span class="ic-x">${ICONS.x}</span><span id="toast-text"></span></div>
 <script src="${CDN}/codemirror.min.js"></script>
 <script src="${CDN}/addon/mode/loadmode.min.js"></script>
 <script src="${CDN}/addon/edit/matchbrackets.min.js"></script>
@@ -214,10 +227,10 @@ export function notFound() {
     status: 404,
     plain: true,
     body: `<main class="gone">
-  <p class="eyebrow">404</p>
+  <p class="big grad">404</p>
   <h1>Nothing here</h1>
-  <p>This paste has expired or never existed. Pastes are deleted 24 hours after they are made.</p>
-  <a class="btn" href="/">New paste</a>
+  <p class="lead">This paste has expired or never existed. Every paste is deleted 24 hours after it is made.</p>
+  <a class="btn btn-primary btn-lg" href="/">${ICONS.plus}<span class="label">New paste</span></a>
 </main>`,
   });
 }
